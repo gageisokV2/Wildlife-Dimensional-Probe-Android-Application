@@ -14,6 +14,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.*
 import android.text.Editable
 import android.text.TextWatcher
@@ -23,6 +24,8 @@ import android.widget.Button
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -109,6 +112,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sliderVal: TextView
     private lateinit var slider: SeekBar
     private lateinit var fileKeyword: TextView
+    private lateinit var loadButton: Button
+    private lateinit var filePickerLauncher: ActivityResultLauncher<Intent>
 
     private var readDataIn = false
     private val communicationServiceUUID: UUID =
@@ -141,6 +146,7 @@ class MainActivity : AppCompatActivity() {
     private var isScanning: Boolean = false
     private val handler = Handler(Looper.getMainLooper())
     private var captureCount: String = "1"
+    private var fileContent: String = ""
 
 
     @SuppressLint("MissingPermission")
@@ -166,6 +172,7 @@ class MainActivity : AppCompatActivity() {
         sliderVal = findViewById(R.id.scrollBarVal)
         slider = findViewById(R.id.Scrollbar)
         fileKeyword = findViewById(R.id.keywordEditText)
+        loadButton = findViewById(R.id.load_button)
 
         coordinateCount = 0 //initialize to 0
         pointCloud = FloatArray(2688)
@@ -180,6 +187,39 @@ class MainActivity : AppCompatActivity() {
         sliderVal.text = "Number of captures: 1"
 
 //        runOnUiThread{viewButton.isEnabled = true} //TODO TEMPORARY REMOVE AFTER USE
+
+        // Initialize the filePickerLauncher
+        filePickerLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val data: Intent? = result.data
+                    // Handle the selected file here
+                    if (data != null) {
+                        val selectedFileUri = data.data
+                        // Read the file content using Kotlin Coroutine
+                        selectedFileUri?.let { uri ->
+                            GlobalScope.launch(Dispatchers.IO) {
+                                fileContent = readTextFromUri(uri)
+                                // Now you have the file content, you can process it as needed
+                                // Example: displayFileContent(fileContent)
+                                val status = checkLoadedFile(fileContent)
+                                if (status) {
+                                    runOnUiThread {
+                                        scrollingTextView.append(">>Data successfully loaded in. You may now view the data.\n")
+                                        viewButton.isEnabled = true
+                                    }
+                                }
+                                else{
+                                    runOnUiThread {
+                                        scrollingTextView.append(">>Invalid data. Failed to load.\n")
+                                        viewButton.isEnabled = false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
         connectionButton.setOnClickListener {
             // Define the action to be taken when the connectionButton is clicked
@@ -199,6 +239,14 @@ class MainActivity : AppCompatActivity() {
 
                 startBleScan() //will start the entire connection sequence
             }
+        }
+
+        loadButton.setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            intent.type =
+                "text/plain" // Set the MIME type here to filter file types, e.g., "image/*" for images
+            filePickerLauncher.launch(intent)
         }
 
         scrollingTextView.addTextChangedListener(object : TextWatcher {
@@ -254,7 +302,7 @@ class MainActivity : AppCompatActivity() {
                         imagerToMobileChar, data //ON /N
                     )
                 }
-            } else{
+            } else {
                 runOnUiThread {
                     scrollingTextView.append(
                         ">>Invalid file keyword" +
@@ -282,6 +330,26 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    private fun checkLoadedFile(data: String): Boolean {
+        var empty = true
+        pointCloud = FloatArray(2688)
+        val pattern = Regex("x:(-?\\d+\\.\\d+) y:(-?\\d+\\.\\d+) z:(-?\\d+\\.\\d+)")
+        val matches = pattern.findAll(data)
+
+        for (match in matches) {
+            val (x, y, z) = match.destructured
+            val tripleCoords = Triple(x.toFloat(), y.toFloat(), z.toFloat())
+            processCoordinates(tripleCoords)
+        }
+
+        for (element in pointCloud) {
+            if (element != 0.0f) {
+                return true
+            }
+        }
+        return false
+    }
+
     /**
      * Checks if the given input text contains any forbidden characters that are not allowed as keywords.
      *
@@ -293,6 +361,16 @@ class MainActivity : AppCompatActivity() {
     private fun keywordChecker(): Boolean {
         val pattern = Regex("[\\\\/:*?\"<>|{}|%$#@!`~]")
         return !pattern.containsMatchIn(fileKeyword.text.toString())
+    }
+
+    private suspend fun readTextFromUri(uri: Uri): String = withContext(Dispatchers.IO) {
+        val inputStream = contentResolver.openInputStream(uri)
+        inputStream?.use { stream ->
+            stream.reader().use { reader ->
+                return@withContext reader.readText()
+            }
+        }
+        return@withContext ""
     }
 
     /**
@@ -500,7 +578,7 @@ class MainActivity : AppCompatActivity() {
                 )
                 val name = name ?: "Unnamed"
                 imagerAddress = address
-                if ((name == imagerName)){//) and (address == imagerAddress)) {
+                if ((name == imagerName)) {//) and (address == imagerAddress)) {
                     //end scanning, we have what we need
                     stopBleScan() //stop scanning once we find the device
                     foundDevice = true
@@ -625,7 +703,7 @@ class MainActivity : AppCompatActivity() {
                 val data = hexToAscii(value.toHexString())
 
                 if ((data.uppercase().contains("COMMENCE")) || readDataIn) {
-                    runOnUiThread{viewButton.isEnabled = false}
+                    runOnUiThread { viewButton.isEnabled = false }
 
                     runOnUiThread { scrollingTextView.append("...") }
                     readDataIn = true
@@ -638,7 +716,7 @@ class MainActivity : AppCompatActivity() {
                     try {
                         processReceivedData(hexToAscii(buffer)) // Process the complete data buffer
 
-                        runOnUiThread{viewButton.isEnabled = true}
+                        runOnUiThread { viewButton.isEnabled = true }
                     } catch (e: InterruptedException) {
                         e.printStackTrace()
                     }

@@ -181,7 +181,7 @@ class MyGLRenderer(private val pointCloud: FloatArray) : GLSurfaceView.Renderer 
             vertexBuffer
         )
         GLES20.glEnableVertexAttribArray(mPositionHandle)
-        Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -3f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
+        Matrix.setLookAtM(viewMatrix, 0, 20f, 20f, 0f, 0f, 0f, 0f, 0f, 0f, 1.0f)
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
         Matrix.multiplyMM(mvpMatrix, 0, mvpMatrix, 0, modelMatrix, 0)
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0)

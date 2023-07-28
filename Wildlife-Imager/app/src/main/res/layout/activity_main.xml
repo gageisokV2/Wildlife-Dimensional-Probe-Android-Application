@@ -19,7 +19,7 @@
         android:layout_marginBottom="8dp"
         android:text="Connect"
         app:backgroundTint="#0A52A3"
-        app:icon="@android:drawable/ic_menu_share"
+        app:icon="@android:drawable/stat_sys_data_bluetooth"
         app:layout_constraintBottom_toTopOf="@+id/textView4"
         app:layout_constraintEnd_toEndOf="@+id/textView5"
         app:layout_constraintStart_toStartOf="@+id/textView5"
@@ -28,12 +28,13 @@
     <EditText
         android:id="@+id/keywordEditText"
         android:layout_width="183dp"
-        android:layout_height="40dp"
+        android:layout_height="48dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:hint="Enter Keyword"
+        android:hint="Enter Keyword For Save File"
         android:inputType="text"
         android:textAlignment="center"
+        android:textSize="14sp"
         app:layout_constraintBottom_toTopOf="@+id/captureButton"
         app:layout_constraintEnd_toEndOf="@+id/Scrollbar"
         app:layout_constraintStart_toStartOf="@+id/Scrollbar"
@@ -44,10 +45,11 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:text="View Data"
         app:backgroundTint="#F44336"
         app:icon="@android:drawable/ic_menu_view"
-        app:layout_constraintBottom_toTopOf="@+id/clearButton"
+        app:layout_constraintBottom_toTopOf="@+id/load_button"
         app:layout_constraintEnd_toEndOf="@+id/textView4"
         app:layout_constraintStart_toStartOf="@+id/textView4"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
@@ -65,7 +67,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/viewButton"
         app:layout_constraintStart_toStartOf="@+id/viewButton"
-        app:layout_constraintTop_toBottomOf="@+id/viewButton" />
+        app:layout_constraintTop_toBottomOf="@+id/load_button" />
 
     <Button
         android:id="@+id/captureButton"
@@ -124,7 +126,7 @@
         android:layout_height="25dp"
         android:text="N/A"
         android:textAlignment="center"
-        android:textSize="14sp"
+        android:textSize="12sp"
         app:layout_constraintBottom_toTopOf="@+id/connection_state"
         app:layout_constraintEnd_toEndOf="@+id/textView4"
         app:layout_constraintStart_toEndOf="@+id/textView"
@@ -204,7 +206,7 @@
         android:layout_height="30dp"
         android:layout_marginStart="200dp"
         android:layout_marginEnd="200dp"
-        android:text="Wildlife Dimensional Probe"
+        android:text="Wildlife Dimensional Probe Communication"
         android:textAlignment="center"
         android:textColor="#2196F3"
         android:textSize="20sp"
@@ -239,6 +241,20 @@
         app:layout_constraintEnd_toEndOf="@+id/textView8"
         app:layout_constraintStart_toStartOf="@+id/textView8"
         app:layout_constraintTop_toBottomOf="@+id/textView8" />
+
+    <Button
+        android:id="@+id/load_button"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Load Data"
+        app:icon="@android:drawable/stat_sys_upload"
+        app:layout_constraintBottom_toTopOf="@+id/clearButton"
+        app:layout_constraintEnd_toEndOf="@+id/viewButton"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/viewButton"
+        app:layout_constraintTop_toBottomOf="@+id/viewButton" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
