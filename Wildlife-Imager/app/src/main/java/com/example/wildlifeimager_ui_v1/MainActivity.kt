@@ -21,6 +21,7 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
@@ -52,52 +53,6 @@ private const val RUNTIME_PERMISSION_REQUEST_CODE = 2
 
 class MainActivity : AppCompatActivity() {
 
-//    private lateinit var pointCloud: FloatArray
-//    private var coordinateCount by Delegates.notNull<Int>()
-//    private lateinit var connectionButton: Button
-//    private lateinit var clearButton: Button
-//    private lateinit var captureButton: Button
-//    private lateinit var viewButton: Button
-//    private lateinit var connectionState: TextView
-//    private lateinit var deviceAddressText: TextView
-//    private lateinit var scrollingTextView: TextView
-//    private lateinit var textScroller: ScrollView
-//    private lateinit var sliderVal: TextView
-//    private lateinit var slider: SeekBar
-//    private lateinit var fileKeyword: TextView
-//
-//    private var readDataIn = false
-//    private val communicationServiceUUID: UUID =
-//        UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7")
-//    private val mobileToImagerCharacteristicUUID: UUID =
-//        UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cba")
-//    private var gatt: BluetoothGatt? = null
-//    private var initialized = false
-//    private val CccdUuid: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
-//    private val init1UUIDServ: UUID = UUID.fromString("866d3b04-e674-40dc-9c05-b7f91bec6e83")
-//    private val init2UUIDServ: UUID = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7")
-//    private val init3UUIDServ: UUID = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7")
-//    private val init4UUIDServ: UUID = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7")
-//    private val init59UUIDServ: UUID = UUID.fromString("866d3b04-e674-40dc-9c05-b7f91bec6e83")
-//    private val init1UUID: UUID = UUID.fromString("e2048b39-d4f9-4a45-9f25-1856c10d5639")
-//    private val init2UUID: UUID = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb8")
-//    private val init3UUID: UUID = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb9")
-//    private val init4UUID: UUID = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb9")
-//    private val init59UUID: UUID = UUID.fromString("914f8fb9-e8cd-411d-b7d1-14594de45425")
-//    private val init14Data = byteArrayOf(0x01)
-//    private val init5Data = byteArrayOf(0X41, 0X54, 0X2B, 0X42, 0X49, 0X4E, 0X52, 0X45, 0X51)
-//    private val init9Data = byteArrayOf(0X0d, 0X0a, 0X4f, 0X4b, 0X0d, 0X0a, 0X00, 0X0A)
-//    private val imagerName = "CLv2-CodeLess"//Change this name to the name of the Bluetooth device.
-//    private lateinit var imagerAddress: String
-//    private var foundDevice = false
-//    private var connected = false
-//    private var dataBuffer: StringBuilder = StringBuilder()
-//    private var buffer: String = ""
-//    private var isScanning: Boolean = false
-//    private val handler = Handler(Looper.getMainLooper())
-//    private var captureCount: String = "1" //initialize to 1
-
-
     private lateinit var pointCloud: FloatArray
     private var coordinateCount by Delegates.notNull<Int>()
 
@@ -114,6 +69,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fileKeyword: TextView
     private lateinit var loadButton: Button
     private lateinit var filePickerLauncher: ActivityResultLauncher<Intent>
+    private lateinit var wdpBatteryLevelText: TextView
+    private lateinit var wdpBatteryLevelPerc: ProgressBar
 
     private var readDataIn = false
     private val communicationServiceUUID: UUID =
@@ -147,6 +104,7 @@ class MainActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var captureCount: String = "1"
     private var fileContent: String = ""
+    private var wdpBatt = 0
 
 
     @SuppressLint("MissingPermission")
@@ -173,6 +131,12 @@ class MainActivity : AppCompatActivity() {
         slider = findViewById(R.id.Scrollbar)
         fileKeyword = findViewById(R.id.keywordEditText)
         loadButton = findViewById(R.id.load_button)
+        wdpBatteryLevelPerc = findViewById(R.id.batteryLevelBar)
+        wdpBatteryLevelText = findViewById(R.id.batteryLevelPercent)
+
+        wdpBatteryLevelText.text = "0%"
+        wdpBatteryLevelPerc.isIndeterminate = false
+        wdpBatteryLevelPerc.progress = 0
 
         coordinateCount = 0 //initialize to 0
         pointCloud = FloatArray(2688)
@@ -201,21 +165,21 @@ class MainActivity : AppCompatActivity() {
                             GlobalScope.launch(Dispatchers.IO) {
                                 fileContent = readTextFromUri(uri)
                                 // Now you have the file content, you can process it as needed
-                                // Example: displayFileContent(fileContent)
+                                // Example: displayFileContent(fileContent
                                 val status = checkLoadedFile(fileContent)
                                 if (status) {
                                     runOnUiThread {
                                         scrollingTextView.append(">>Data successfully loaded in. You may now view the data.\n")
                                         viewButton.isEnabled = true
                                     }
-                                }
-                                else{
+                                } else {
                                     runOnUiThread {
                                         scrollingTextView.append(">>Invalid data. Failed to load.\n")
                                         viewButton.isEnabled = false
                                     }
                                 }
                             }
+
                         }
                     }
                 }
@@ -710,21 +674,40 @@ class MainActivity : AppCompatActivity() {
                     buffer += value.toHexString()
                 }
 
+
+
                 if (data.uppercase().contains("COMPLETED")) {
                     readDataIn = false
-                    runOnUiThread { scrollingTextView.append(">>Starting data processing\n") }
+                    runOnUiThread { scrollingTextView.append(">>Begin data processing") }
+                    Thread.sleep(100)
                     try {
                         processReceivedData(hexToAscii(buffer)) // Process the complete data buffer
-
+                        Thread.sleep(1000)
                         runOnUiThread { viewButton.isEnabled = true }
+
                     } catch (e: InterruptedException) {
                         e.printStackTrace()
+                    }
+                }
+
+                if(data.uppercase().contains("BATTERY")){
+                    Thread.sleep(100)
+                    val batteryLevel = data.split("-")
+                    runOnUiThread{
+                        scrollingTextView.append(">>Battery level received\n")
+                        wdpBatteryLevelText.text = batteryLevel[1].toString().plus("%")
+                        wdpBatteryLevelPerc.progress = Integer.parseInt(batteryLevel[1])
                     }
                 }
 
                 if (data.uppercase().contains("ERROR") || data.uppercase().contains("MESSAGE")) {
                     runOnUiThread {
                         scrollingTextView.append("$data")
+                    }
+                    if((data.uppercase().contains("READY FOR CAPTURE"))){
+                        runOnUiThread {
+                            captureButton.isEnabled = true
+                        }
                     }
                 }
             }
@@ -1200,7 +1183,7 @@ class MainActivity : AppCompatActivity() {
 
         runOnUiThread {
             scrollingTextView.append(">>Sending date and time\n")
-            captureButton.isEnabled = true
+//            captureButton.isEnabled = true
         }
         delay(sleep.toLong())
 

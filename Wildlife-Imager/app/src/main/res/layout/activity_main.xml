@@ -78,12 +78,11 @@
         android:text="Capture"
         app:backgroundTint="#E91E63"
         app:icon="@android:drawable/btn_star_big_on"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/batteryLevelBar"
         app:layout_constraintEnd_toEndOf="@+id/keywordEditText"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/keywordEditText"
-        app:layout_constraintTop_toBottomOf="@+id/keywordEditText"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/keywordEditText" />
 
     <TextView
         android:id="@+id/textView"
@@ -255,6 +254,39 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/viewButton"
         app:layout_constraintTop_toBottomOf="@+id/viewButton" />
+
+    <ProgressBar
+        android:id="@+id/batteryLevelBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="32dp"
+        android:indeterminate="true"
+        android:max="100"
+        android:scaleX="2"
+        android:scaleY="2"
+        android:indeterminateOnly="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/captureButton"
+        app:layout_constraintStart_toStartOf="@+id/captureButton"
+        app:layout_constraintTop_toBottomOf="@+id/captureButton" />
+
+    <TextView
+        android:id="@+id/batteryLevelPercent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:digits="5"
+        android:text="0%"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:flow_verticalAlign="center"
+        app:layout_constraintBottom_toBottomOf="@+id/batteryLevelBar"
+        app:layout_constraintEnd_toEndOf="@+id/batteryLevelBar"
+        app:layout_constraintStart_toStartOf="@+id/batteryLevelBar"
+        app:layout_constraintTop_toTopOf="@+id/batteryLevelBar"
+        tools:flow_verticalAlign="center" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
